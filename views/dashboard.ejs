@@ -7,7 +7,8 @@
             <% if(users.length>0)
                 {
                 for(let i=0;i<users.length;i++) { %>
-                    <li class="list-group-item list-group-item-dark cursor-pointer user-list " data-id="<%= users[i]['_id']%>">
+                    <li class="list-group-item list-group-item-dark cursor-pointer user-list "
+                        data-id="<%= users[i]['_id']%>">
                         <%=users[i]['name']%>
                             <% if(users[i]['is_online']==1) { %>
 
@@ -90,8 +91,8 @@
                     $('#message').val('')
                     let chat = response.data.message;
                     let html =
-                        ` <div class="current-user-chat">
-                            <h5>`+ chat + `</h5>
+                        ` <div class="current-user-chat" id="`+response.data._id+`">
+                            <h5>`+ chat + `<i class="fa fa-trash" aria-hidden="true" data-id="`+response.data._id+`"></i></h5>
                             </div>`;
                     $('#chat-container').append(html);
                     console.log("hell o this is dashboard");
@@ -109,9 +110,9 @@
 
         if (sender_id == data.receiver_id && receiver_id == data.sender_id) {
             let html =
-                ` <div class="distance-user-chat">
+                ` <div class="distance-user-chat"id="`+data._ide+`" >
                             <h5>`+ data.message + `</h5>
-                            </div>`;
+                            </div> `;
             $('#chat-container').append(html);
         }
         scrollChat()
@@ -128,14 +129,18 @@
             let addClass = ''
             if (chats[x]['sender_id'] == sender_id) {
                 addClass = 'current-user-chat'
+                html += ` <div class="` + addClass + `" id="`+chats[x]['_id']+`">
+                            <h5>`+ chats[x]['message'] + ` <i class="fa fa-trash" aria-hidden="true" data-id="`+chats[x]['_id']+`" ></i></h5>
+                            </div>`
             }
             else {
                 addClass = 'distance-user-chat'
-            }
-
-            html += ` <div class="` + addClass + `">
+                html += ` <div class="` + addClass + `" id="`+chats[x]['_id']+`">
                             <h5>`+ chats[x]['message'] + `</h5>
                             </div>`
+            }
+           
+            
 
             $('#chat-container').append(html)
             scrollChat()
@@ -149,6 +154,33 @@
         }, 0)
     }
 
+    // Delete chat work
+    $(document).on('click', '.fa-trash', function () {
+            let id = $(this).attr('data-id');
+            $.ajax({
+                url: '/delete-chat',
+                method: 'POST',
+                data: { id: id },
+                success: function (res) {
+                    if (res.success == true) {
+                        console.log('#' + id);
+                        $('#' + id).remove()
+                        console.log("kem 6o majama" +id);
+                        socket.emit('chatDeleted',id)
+                    }
+                    else {
+                        alert(res.msg)
+                    }
+                }
+            })
+        })
+
+    // Delete message from the other side
+    socket.on('chatMessageDeleted',function(id)
+    {
+        console.log("aavyo pan remove nathi karyu"+id);
+        $('#' + id).remove()
+    })
 
 </script>
 

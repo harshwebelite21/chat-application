@@ -46,6 +46,12 @@ usp.on("connection", async (socket) => {
     });
     socket.emit("loadChats", { chats: Chats });
   });
+
+  // Delete chat
+  socket.on("chatDeleted", function (id) {
+    console.log("aavyo ke nahi"+id);
+    socket.broadcast.emit("chatMessageDeleted", id);
+  });
 });
 
 mongoose.connect(

@@ -33,4 +33,6 @@ user_route.get("*", async (req, res) => {
   res.redirect("/login");
 });
 
+user_route.post("/delete-chat", userController.deleteChat);
+
 module.exports = user_route;

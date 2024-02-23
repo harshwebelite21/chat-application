@@ -88,6 +88,20 @@ const saveChat = async (req, res) => {
   }
 };
 
+// To Delete User Chat
+const deleteChat = async (req, res) => {
+  try {
+    console.log(req.body.id);
+    await Chat.findByIdAndDelete(req.body.id);
+    console.log(req.body.id);
+
+    res.send({ success: true, msg: "Chat Deleted" });
+  } catch (error) {
+    console.log("kem 6o majama");
+    res.status(400).send({ success: false, msg: error.message });
+  }
+};
+
 module.exports = {
   register,
   registerLoad,
@@ -96,4 +110,5 @@ module.exports = {
   login,
   saveChat,
   logout,
+  deleteChat,
 };

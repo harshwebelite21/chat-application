@@ -49,8 +49,13 @@ usp.on("connection", async (socket) => {
 
   // Delete chat
   socket.on("chatDeleted", function (id) {
-    console.log("aavyo ke nahi"+id);
+    console.log("aavyo ke nahi" + id);
     socket.broadcast.emit("chatMessageDeleted", id);
+  });
+
+  // Update chat
+  socket.on("updateChatToApp", function (data) {
+    socket.broadcast.emit("updateChatForAllUser", data);
   });
 });
 

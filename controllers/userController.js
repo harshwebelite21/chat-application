@@ -102,6 +102,23 @@ const deleteChat = async (req, res) => {
   }
 };
 
+// TO Update User Chat
+const updateChat = async (req, res) => {
+  try {
+    console.log(req.body.id);
+    await Chat.findByIdAndUpdate(
+      { _id: req.body.id },
+      { $set: { message: req.body.newMessage } }
+    );
+    console.log(req.body.id);
+    console.log(req.body.newMessage);
+
+    res.send({ success: true, msg: "Chat Updated" });
+  } catch (error) {
+    res.status(400).send({ success: false, msg: error.message });
+  }
+};
+
 module.exports = {
   register,
   registerLoad,
@@ -111,4 +128,5 @@ module.exports = {
   saveChat,
   logout,
   deleteChat,
+  updateChat,
 };

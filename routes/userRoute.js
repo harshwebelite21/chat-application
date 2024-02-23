@@ -35,4 +35,7 @@ user_route.get("*", async (req, res) => {
 
 user_route.post("/delete-chat", userController.deleteChat);
 
+// To Update User Chat
+user_route.post("/update-message", userController.updateChat);
+
 module.exports = user_route;

@@ -24,16 +24,7 @@
     <div class="col-md-8">
         <h3 class="start-head">Click To Start chat</h3>
         <div class="chat-section">
-            <div id="chat-container">
-                <!-- 
-
-                <div class="distance-user-chat">
-                    <h5>Hill</h5>
-                </div> -->
-
-
-
-            </div>
+            <div id="chat-container"> </div>
             <form action="" id="chat-form">
                 <input type="text" name="message" placeholder="Enter Message" id="message" class="border" required>
                 <input type="submit" value="Send-Message" class="btn btn-primary">
@@ -41,6 +32,32 @@
         </div>
     </div>
 </div>
+
+<!-- Update dialog box -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <form class="update-chat-form">
+                <input type="text" id="oldChatToUpdate" >
+                <input type="text" placeholder="Enter Updated Text" id="newChatToUpdate" update-message-id="">
+                <div class="modal-footer">        
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
 
 <script>
 
@@ -91,8 +108,8 @@
                     $('#message').val('')
                     let chat = response.data.message;
                     let html =
-                        ` <div class="current-user-chat" id="`+response.data._id+`">
-                            <h5>`+ chat + `<i class="fa fa-trash" aria-hidden="true" data-id="`+response.data._id+`"></i></h5>
+                        ` <div class="current-user-chat" id="` + response.data._id + `">
+                            <h5>`+ chat + `<i class="fa fa-trash" aria-hidden="true" data-id="` + response.data._id + `"></i>    <i class="fa fa-refresh" aria-hidden="true"  data-id="` + response.data._id + `"  data-toggle="modal" data-target="#exampleModal"></i></h5>
                             </div>`;
                     $('#chat-container').append(html);
                     console.log("hell o this is dashboard");
@@ -110,7 +127,7 @@
 
         if (sender_id == data.receiver_id && receiver_id == data.sender_id) {
             let html =
-                ` <div class="distance-user-chat"id="`+data._ide+`" >
+                ` <div class="distance-user-chat"id="` + data._ide + `" >
                             <h5>`+ data.message + `</h5>
                             </div> `;
             $('#chat-container').append(html);
@@ -120,32 +137,27 @@
 
     // load old chats
     socket.on('loadChats', (data) => {
-        $('#chat-container').html('')
-        var chats = data.chats;
-        let html = '';
+            $('#chat-container').html('')
+            var chats = data.chats;
+            let html = '';
 
-
-        for (let x = 0; x < chats.length; x++) {
-            let addClass = ''
-            if (chats[x]['sender_id'] == sender_id) {
-                addClass = 'current-user-chat'
-                html += ` <div class="` + addClass + `" id="`+chats[x]['_id']+`">
-                            <h5>`+ chats[x]['message'] + ` <i class="fa fa-trash" aria-hidden="true" data-id="`+chats[x]['_id']+`" ></i></h5>
+            for (let x = 0; x < chats.length; x++) {
+                if (chats[x]['sender_id'] == sender_id) {
+                    html += ` <div class="current-user-chat" id="` + chats[x]['_id'] + `">
+                            <h5>`+ chats[x]['message'] + ` <i class="fa fa-trash" aria-hidden="true" data-id="` + chats[x]['_id'] + `" ></i> 
+                                <i class="fa fa-refresh" aria-hidden="true" data-id="` + chats[x]['_id'] + `" data-toggle="modal" data-target="#exampleModal" ></i></h5>
                             </div>`
-            }
-            else {
-                addClass = 'distance-user-chat'
-                html += ` <div class="` + addClass + `" id="`+chats[x]['_id']+`">
+                }
+                else {
+                    html += ` <div class="distance-user-chat" id="` + chats[x]['_id'] + `">
                             <h5>`+ chats[x]['message'] + `</h5>
                             </div>`
+                }
             }
-           
-            
 
             $('#chat-container').append(html)
             scrollChat()
-        }
-    })
+        })
 
     // function to solve scroll issue
     function scrollChat() {
@@ -156,17 +168,55 @@
 
     // Delete chat work
     $(document).on('click', '.fa-trash', function () {
-            let id = $(this).attr('data-id');
+        let id = $(this).attr('data-id');
+        $.ajax({
+            url: '/delete-chat',
+            method: 'POST',
+            data: { id: id },
+            success: function (res) {
+                if (res.success == true) {
+                    console.log('#' + id);
+                    $('#' + id).remove()
+                    console.log("kem 6o majama" + id);
+                    socket.emit('chatDeleted', id)
+                }
+                else {
+                    alert(res.msg)
+                }
+            }
+        })
+    })
+
+    // Delete message from the other side
+    socket.on('chatMessageDeleted', function (id) {
+        console.log("aavyo pan remove nathi karyu" + id);
+        $('#' + id).remove()
+    })
+
+    // To Update The message
+    $(document).on('click', '.fa-refresh', function () {
+       const oldMessage= $(this).parent().text();
+        $('#oldChatToUpdate').val(oldMessage)
+        $('#oldChatToUpdate').prop('readonly', true)
+        $('#newChatToUpdate').attr('update-message-id',$(this).attr('data-id'))
+
+    })
+
+    // To update from the chat form using classnames update-chat-form
+        $('.update-chat-form').on('submit', function (event) {
+            event.preventDefault()
+            const newUpdatedMessage = $('#newChatToUpdate').val()
+            const updateIdOfOldMessage = $('#newChatToUpdate').attr('update-message-id')
             $.ajax({
-                url: '/delete-chat',
+                url: '/update-message',
                 method: 'POST',
-                data: { id: id },
+                data: { id: updateIdOfOldMessage, newMessage: newUpdatedMessage },
                 success: function (res) {
                     if (res.success == true) {
-                        console.log('#' + id);
-                        $('#' + id).remove()
-                        console.log("kem 6o majama" +id);
-                        socket.emit('chatDeleted',id)
+                        let htm = `<h5>`+ newUpdatedMessage + ` <i class="fa fa-trash" aria-hidden="true" data-id="` + updateIdOfOldMessage + `" ></i> 
+                                <i class="fa fa-refresh" aria-hidden="true" data-id="` + updateIdOfOldMessage + `" data-toggle="modal" data-target="#exampleModal" ></i></h5>`;
+                        $('#' + updateIdOfOldMessage).html(htm);
+                        socket.emit('updateChatToApp', { id: updateIdOfOldMessage, newMessage: newUpdatedMessage })
                     }
                     else {
                         alert(res.msg)
@@ -175,13 +225,13 @@
             })
         })
 
-    // Delete message from the other side
-    socket.on('chatMessageDeleted',function(id)
-    {
-        console.log("aavyo pan remove nathi karyu"+id);
-        $('#' + id).remove()
+    // To Update Message For Receiver side when update message happen
+    socket.on('updateChatForAllUser', function (data) {
+        const id = data.id;
+        const newMessage = data.newMessage;
+        let htm =`<h5>`+ newMessage + `</h5>`;
+        $('#' + id).html(htm);
     })
-
 </script>
 
 <%-include('layouts/footer.ejs') %>
